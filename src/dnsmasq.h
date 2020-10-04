@@ -14,6 +14,9 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef __DNSMASQ_H__
+#define __DNSMASQ_H__
+
 #define COPYRIGHT "Copyright (c) 2000-2020 Simon Kelley"
 
 /* We do defines that influence behavior of stdio.h, so complain
@@ -1656,4 +1659,6 @@ int do_arp_script_run(void);
 #ifdef HAVE_DUMPFILE
 void dump_init(void);
 void dump_packet(int mask, void *packet, size_t len, union mysockaddr *src, union mysockaddr *dst);
+#endif
+
 #endif
