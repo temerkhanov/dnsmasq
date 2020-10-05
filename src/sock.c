@@ -61,7 +61,41 @@ struct command {
   int (*handler)(char *args, time_t now);
 };
 
+static int sock_del_lease(char *args, time_t now)
+{
+  char *ipaddr = args;
+  union all_addr addr;
+  struct dhcp_lease *lease;
+  int ret = 0;
+
+  if (inet_pton(AF_INET, ipaddr, &addr.addr4))
+    lease = lease_find_by_addr(addr.addr4);
+#ifdef HAVE_DHCP6
+  else if (inet_pton(AF_INET6, ipaddr, &addr.addr6))
+    lease = lease6_find_by_addr(&addr.addr6, 128, 0);
+#endif
+  else {
+    my_syslog(LOG_INFO, _("No lease for address %s"), ipaddr);
+    return -ENOENT;
+  }
+
+  if (lease)
+    {
+      my_syslog(LOG_INFO, _("Removing lease for address %s"), ipaddr);
+      lease_prune(lease, now);
+      lease_update_file(now);
+      lease_update_dns(0);
+    }
+  else
+    ret = -ENOENT;
+
+  return ret;
+}
+
 static const struct command handlers[] = {
+  {.cmd = "del_lease", .handler = sock_del_lease},
+  /* del_lease <IP address> */
+
   {.cmd = NULL, .handler = NULL},
 };
 
