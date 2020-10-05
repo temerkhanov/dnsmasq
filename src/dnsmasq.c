@@ -410,7 +410,9 @@ int main (int argc, char **argv)
 #else
   die(_("Packet dumps not available: set HAVE_DUMP in src/config.h"), NULL, EC_BADCONF);
 #endif
-  
+
+  daemon->ctrlsockfd = ctrl_socket_init();
+
   if (option_bool(OPT_DBUS))
 #ifdef HAVE_DBUS
     {
@@ -1075,6 +1077,9 @@ int main (int argc, char **argv)
 	poll_listen(daemon->inotifyfd, POLLIN);
 #endif
 
+      if (daemon->ctrlsockfd != -1)
+        poll_listen(daemon->ctrlsockfd, POLLIN);
+
 #if defined(HAVE_LINUX_NETWORK)
       poll_listen(daemon->netlinkfd, POLLIN);
 #elif defined(HAVE_BSD_NETWORK)
@@ -1166,6 +1171,9 @@ int main (int argc, char **argv)
 	  daemon->last_resolv = now;
 	}
 #endif
+
+      if (daemon->ctrlsockfd != -1 && poll_check(daemon->ctrlsockfd, POLLIN))
+        ctrl_socket_check(now);
 
       if (poll_check(piperead, POLLIN))
 	async_event(piperead, now);

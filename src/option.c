@@ -167,6 +167,7 @@ struct myoption {
 #define LOPT_IGNORE_CLID   358
 #define LOPT_SINGLE_PORT   359
 #define LOPT_SCRIPT_TIME   360
+#define LOPT_CTRL_SOCK     361
  
 #ifdef HAVE_GETOPT_LONG
 static const struct option opts[] =  
@@ -339,6 +340,7 @@ static const struct myoption opts[] =
     { "dumpfile", 1, 0, LOPT_DUMPFILE },
     { "dumpmask", 1, 0, LOPT_DUMPMASK },
     { "dhcp-ignore-clid", 0, 0,  LOPT_IGNORE_CLID },
+    { "ctrl-socket", 1, 0, LOPT_CTRL_SOCK },
     { NULL, 0, 0, 0 }
   };
 
@@ -518,6 +520,7 @@ static struct {
   { LOPT_DUMPFILE, ARG_ONE, "<path>", gettext_noop("Path to debug packet dump file"), NULL },
   { LOPT_DUMPMASK, ARG_ONE, "<hex>", gettext_noop("Mask which packets to dump"), NULL },
   { LOPT_SCRIPT_TIME, OPT_LEASE_RENEW, NULL, gettext_noop("Call dhcp-script when lease expiry changes."), NULL },
+  { LOPT_CTRL_SOCK, ARG_DUP, "<path>", gettext_noop("Control socket name (defaults to %s)."), CTRLSOCK },
   { 0, 0, NULL, NULL, NULL }
 }; 
 
@@ -1988,7 +1991,11 @@ static int one_opt(int option, char *arg, char *errstr, char *gen_err, int comma
     case LOPT_DUMPMASK:  /* --dumpmask */
       daemon->dump_mask = strtol(arg, NULL, 0);
       break;
-      
+
+    case LOPT_CTRL_SOCK: /* --ctrl-socket */
+      daemon->ctrlsock = opt_string_alloc(arg);
+      break;
+
 #ifdef HAVE_DHCP      
     case 'l':  /* --dhcp-leasefile */
       daemon->lease_file = opt_string_alloc(arg);

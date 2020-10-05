@@ -228,6 +228,8 @@ RESOLVFILE
 #    endif
 #endif
 
+#define CTRLSOCK "/var/run/dnsmasq.sock"
+
 /* platform dependent options: these are determined automatically below
 
 HAVE_LINUX_NETWORK

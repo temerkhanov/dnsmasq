@@ -156,6 +156,7 @@ extern int capget(cap_user_header_t header, cap_user_data_t data);
 #define LINUX_CAPABILITY_VERSION_3  0x20080522
 
 #include <sys/prctl.h>
+#include "dnsmasq.h"
 #elif defined(HAVE_SOLARIS_NETWORK)
 #include <priv.h>
 #endif
@@ -1114,6 +1115,8 @@ extern struct daemon {
 #ifdef HAVE_INOTIFY
   int inotifyfd;
 #endif
+  char *ctrlsock;
+  int ctrlsockfd;
 #if defined(HAVE_LINUX_NETWORK)
   int netlinkfd, kernel_version;
 #elif defined(HAVE_BSD_NETWORK)
@@ -1629,6 +1632,10 @@ void inotify_dnsmasq_init(void);
 int inotify_check(time_t now);
 void set_dynamic_inotify(int flag, int total_size, struct crec **rhash, int revhashsz);
 #endif
+
+/* sock.c */
+int ctrl_socket_init(void);
+int ctrl_socket_check(time_t now);
 
 /* poll.c */
 void poll_reset(void);
