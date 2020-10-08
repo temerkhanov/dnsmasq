@@ -92,9 +92,65 @@ static int sock_del_lease(char *args, time_t now)
   return ret;
 }
 
+static int sock_add_lease(char *args, time_t now)
+{
+  union all_addr addr;
+  struct dhcp_lease *lease;
+  int ret = 0;
+  char *str = strdupa(args);
+  unsigned char hw_addr_hex[DHCP_CHADDR_MAX];
+  int hw_addr_len = 0, hw_type = 0;
+
+  char *ipaddr = strtok_r(str, " ", &str);
+  char *hwaddr = strtok_r(str, " ", &str);
+  char *hostname = strtok_r(str, " ", &str);
+
+  if (!ipaddr || !hwaddr) {
+    my_syslog(LOG_INFO, _("Invalid parameters for adding a lease"));
+    return -ENOENT;
+  }
+
+  if (inet_pton(AF_INET, ipaddr, &addr.addr4)) {
+    lease = lease_find_by_addr(addr.addr4);
+    if (!lease)
+      lease = lease4_allocate(addr.addr4);
+  }
+#ifdef HAVE_DHCP6
+  else if (inet_pton(AF_INET6, ipaddr, &addr.addr6)) {
+    lease = lease6_find_by_addr(&addr.addr6, 128, 0);
+    if (!lease)
+      lease = lease6_allocate(&addr.addr6, LEASE_NA);
+  }
+#endif
+  else {
+    my_syslog(LOG_INFO, _("Invalid address %s"), ipaddr);
+    return -EINVAL;
+  }
+
+  if (lease)
+    {
+      my_syslog(LOG_INFO, _("Adding lease for address %s : %s : %s"), ipaddr, hwaddr, hostname);
+      hw_addr_len = parse_hex(hwaddr, hw_addr_hex, DHCP_CHADDR_MAX, NULL, &hw_type);
+      if (!hw_type && hw_addr_len)
+        hw_type = ARPHRD_ETHER;
+      lease_set_hwaddr(lease, hw_addr_hex, NULL, hw_addr_len, hw_type, 0, now, 0);
+      if (hostname)
+        lease_set_hostname(lease, hostname, 1, get_domain(lease->addr), NULL);
+      lease_set_expires(lease, 0xffffffff, now);
+      lease_update_file(now);
+      lease_update_dns(0);
+    }
+  else
+    ret = -ENOENT;
+
+  return ret;
+}
+
 static const struct command handlers[] = {
   {.cmd = "del_lease", .handler = sock_del_lease},
   /* del_lease <IP address> */
+  {.cmd = "add_lease", .handler = sock_add_lease},
+  /* add_lease <IP address> <hw address> <hostname>*/
 
   {.cmd = NULL, .handler = NULL},
 };
