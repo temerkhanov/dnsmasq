@@ -61,6 +61,14 @@ struct command {
   int (*handler)(char *args, time_t now);
 };
 
+static int sock_reload(char *args, time_t now)
+{
+  (void)args;
+  clear_cache_and_reload(now);
+
+  return 0;
+}
+
 static int sock_del_lease(char *args, time_t now)
 {
   char *ipaddr = args;
@@ -147,6 +155,8 @@ static int sock_add_lease(char *args, time_t now)
 }
 
 static const struct command handlers[] = {
+  {.cmd = "reload", .handler = sock_reload},
+  /* reload */
   {.cmd = "del_lease", .handler = sock_del_lease},
   /* del_lease <IP address> */
   {.cmd = "add_lease", .handler = sock_add_lease},
