@@ -1092,7 +1092,7 @@ size_t dhcp_reply(struct dhcp_context *context, char *iface_name, int int_index,
 		{
 		  struct dhcp_context *tmp;
 		  for (tmp = context; tmp; tmp = tmp->current)
-		    if (context->router.s_addr == config->addr.s_addr)
+		    if (tmp->router.s_addr == config->addr.s_addr)
 		      break;
 		  if (tmp)
 		    my_syslog(MS_DHCP | LOG_WARNING, _("not using configured address %s because it is in use by the server or relay"), addrs);
