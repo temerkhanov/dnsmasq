@@ -154,6 +154,55 @@ static int sock_add_lease(char *args, time_t now)
   return ret;
 }
 
+static int sock_del_host(char *args, time_t now)
+{
+  (void)now;
+  int ret = -ENOENT;
+  union all_addr addr;
+  struct dhcp_config *config, *next;
+  char *ipaddr = args;
+
+  if (!ipaddr) {
+    my_syslog(LOG_INFO, _("No IP address specified"));
+    return -ENOENT;
+  }
+
+  if (!inet_pton(AF_INET, ipaddr, &addr.addr4))
+    return -EINVAL;
+
+  if (have_config(daemon->dhcp_conf, CONFIG_ADDR) &&
+      daemon->dhcp_conf->addr.s_addr == addr.addr4.s_addr)
+    {
+      config = daemon->dhcp_conf;
+
+      my_syslog(LOG_INFO, _("Removing host entry for address %s"), ipaddr);
+
+      daemon->dhcp_conf = daemon->dhcp_conf->next;
+      dhcp_config_free(config);
+    }
+  else
+    {
+      for (config = daemon->dhcp_conf; config; config = config->next) {
+	next = config->next;
+	if (have_config(next, CONFIG_ADDR) &&
+	    next->addr.s_addr == addr.addr4.s_addr)
+	  {
+	    config->next = next->next;
+
+	    my_syslog(LOG_INFO, _("Removing host entry for address %s"), ipaddr);
+
+	    dhcp_config_free(next);
+
+	    break;
+	  }
+    }
+  }
+
+  my_syslog(LOG_INFO, _("Not removing host entry for address %s"), ipaddr);
+
+  return ret;
+}
+
 static const struct command handlers[] = {
   {.cmd = "reload", .handler = sock_reload},
   /* reload */
@@ -161,6 +210,8 @@ static const struct command handlers[] = {
   /* del_lease <IP address> */
   {.cmd = "add_lease", .handler = sock_add_lease},
   /* add_lease <IP address> <hw address> <hostname>*/
+  {.cmd = "del_host", .handler = sock_del_host},
+  /* del_host <IP address>*/
 
   {.cmd = NULL, .handler = NULL},
 };
