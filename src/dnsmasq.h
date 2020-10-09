@@ -1591,6 +1591,9 @@ void log_context(int family, struct dhcp_context *context);
 void log_relay(int family, struct dhcp_relay *relay);
 #endif
 
+/* option.c */
+void dhcp_config_free(struct dhcp_config *config);
+
 /* outpacket.c */
 #ifdef HAVE_DHCP6
 void end_opt6(int container);

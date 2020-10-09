@@ -1020,7 +1020,7 @@ static void dhcp_netid_list_free(struct dhcp_netid_list *netid)
     }
 }
 
-static void dhcp_config_free(struct dhcp_config *config)
+void dhcp_config_free(struct dhcp_config *config)
 {
   if (config)
     {
